@@ -1,47 +1,50 @@
-<!-- Code by Brave Coder - https://youtube.com/BraveCoder -->
-
 <?php
-    session_start();
-    if (isset($_SESSION['SESSION_EMAIL'])) {
-        header("Location: welcome.php");
-        die();
-    }
 
-    include 'config.php';
-    $msg = "";
+session_start();
+include('./config.php');
+$msg='';
+if(isset($_GET['verification'])){
+    if(mysqli_num_rows(mysqli_query($conn, "SELECT * from users where code = '{$_GET['verification']}'" ))){
 
-    if (isset($_GET['verification'])) {
-        if (mysqli_num_rows(mysqli_query($conn, "SELECT * FROM users WHERE code='{$_GET['verification']}'")) > 0) {
-            $query = mysqli_query($conn, "UPDATE users SET code='' WHERE code='{$_GET['verification']}'");
-            
-            if ($query) {
-                $msg = "<div class='alert alert-success'>Account verification has been successfully completed.</div>";
-            }
-        } else {
-            header("Location: index.php");
+        $sql = mysqli_query($conn, "UPDATE users SET code='' where code='{$_GET['verification']}'");
+
+        if($sql){
+            $msg= "<div class='alert alert-success'> your email is succesfully verified</div>";
         }
+
+    }else{
+        header('location: index.php');
     }
+}
 
-    if (isset($_POST['submit'])) {
-        $email = mysqli_real_escape_string($conn, $_POST['email']);
-        $password = mysqli_real_escape_string($conn, md5($_POST['password']));
 
-        $sql = "SELECT * FROM users WHERE email='{$email}' AND password='{$password}'";
-        $result = mysqli_query($conn, $sql);
+if(isset($_POST['submit'])){
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $password = mysqli_real_escape_string($conn, md5($_POST['password']));
 
-        if (mysqli_num_rows($result) === 1) {
-            $row = mysqli_fetch_assoc($result);
+    $query = "SELECT * from users where email = '{$email}' and password = '{$password}'";
+    $result = mysqli_query($conn, $query);
 
-            if (empty($row['code'])) {
-                $_SESSION['SESSION_EMAIL'] = $email;
-                header("Location: welcome.php");
-            } else {
-                $msg = "<div class='alert alert-info'>First verify your account and try again.</div>";
-            }
-        } else {
-            $msg = "<div class='alert alert-danger'>Email or password do not match.</div>";
+
+    if(mysqli_num_rows($result) === 1){
+        $row = mysqli_fetch_assoc($result);
+
+        if(empty($row['code'])){
+            $_SESSION['email'] = $email;
+            header('location: welcome.php');
+        }else{
+
+             $msg= "<div class='alert alert-danger'> you must verify  your email first</div>";
         }
+    }else{
+        
+        $msg= "<div class='alert alert-danger'> email and password dit not match</div>";
+
     }
+
+   
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -84,8 +87,11 @@
                     </div>
                     <div class="content-wthree">
                         <h2>Login Now</h2>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. </p>
-                        <?php echo $msg; ?>
+                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. </p>    
+
+                        <?php
+                        echo $msg;
+                        ?>
                         <form action="" method="post">
                             <input type="email" class="email" name="email" placeholder="Enter Your Email" required>
                             <input type="password" class="password" name="password" placeholder="Enter Your Password" style="margin-bottom: 2px;" required>

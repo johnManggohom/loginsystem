@@ -1,13 +1,13 @@
 <?php
     session_start();
-    if (!isset($_SESSION['SESSION_EMAIL'])) {
+    if (!isset($_SESSION['email'])) {
         header("Location: index.php");
         die();
     }
 
     include 'config.php';
 
-    $query = mysqli_query($conn, "SELECT * FROM users WHERE email='{$_SESSION['SESSION_EMAIL']}'");
+    $query = mysqli_query($conn, "SELECT * FROM users WHERE email='{$_SESSION['email']}'");
 
     if (mysqli_num_rows($query) > 0) {
         $row = mysqli_fetch_assoc($query);

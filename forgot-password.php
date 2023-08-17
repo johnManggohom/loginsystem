@@ -1,12 +1,4 @@
-<!-- Code by Brave Coder - https://youtube.com/BraveCoder -->
-
 <?php
-
-session_start();
-if (isset($_SESSION['SESSION_EMAIL'])) {
-    header("Location: welcome.php");
-    die();
-}
 
 //Import PHPMailer classes into the global namespace
 //These must be at the top of your script, not inside a function
@@ -17,52 +9,73 @@ use PHPMailer\PHPMailer\Exception;
 //Load Composer's autoloader
 require 'vendor/autoload.php';
 
-include 'config.php';
-$msg = "";
+include("config.php");
+$msg= '';
 
-if (isset($_POST['submit'])) {
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
+if(isset($_POST['submit'])){
+
+    $email = mysqli_real_escape_string($conn,$_POST['email']);
     $code = mysqli_real_escape_string($conn, md5(rand()));
 
-    if (mysqli_num_rows(mysqli_query($conn, "SELECT * FROM users WHERE email='{$email}'")) > 0) {
-        $query = mysqli_query($conn, "UPDATE users SET code='{$code}' WHERE email='{$email}'");
 
-        if ($query) {        
-            echo "<div style='display: none;'>";
-            //Create an instance; passing `true` enables exceptions
-            $mail = new PHPMailer(true);
+    if(mysqli_num_rows(mysqli_query($conn, "SELECT * from users where email = '{$email}'")) ===1){
 
-            try {
-                //Server settings
-                $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
-                $mail->isSMTP();                                            //Send using SMTP
-                $mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
-                $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
-                $mail->Username   = 'YOUR_EMAIL_HERE';                     //SMTP username
-                $mail->Password   = 'YOUR_PASSWORD_HERE';                               //SMTP password
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
-                $mail->Port       = 465;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
 
-                //Recipients
-                $mail->setFrom('YOUR_EMAIL_HERE');
-                $mail->addAddress($email);
+         $sql = "UPDATE users SET code ='{$code}' WHERE email = '{$email}'";
+            $result = mysqli_query($conn, $sql);
 
-                //Content
-                $mail->isHTML(true);                                  //Set email format to HTML
-                $mail->Subject = 'no reply';
-                $mail->Body    = 'Here is the verification link <b><a href="http://localhost/login/change-password.php?reset='.$code.'">http://localhost/login/change-password.php?reset='.$code.'</a></b>';
+            if($result){
 
-                $mail->send();
-                echo 'Message has been sent';
-            } catch (Exception $e) {
-                echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                    //Create an instance; passing `true` enables exceptions
+                    $mail = new PHPMailer(true);
+
+                    try {
+                        //Server settings
+                        $mail->SMTPDebug = 0;                      //Enable verbose debug output
+                        $mail->isSMTP();                                            //Send using SMTP
+                        $mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
+                        $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
+                        $mail->Username   = 'johnmanggohomarmy@gmail.com';                     //SMTP username
+                        $mail->Password   = 'vopjcalerphtzlos';                               //SMTP password
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
+                        $mail->SMTPSecure = 'tls';
+                        $mail->Port       = 587;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+                        $mail->SMTPOptions = array(
+                         'ssl' => array(
+                                'verify_peer' => false,
+                                'verify_peer_name' => false,
+                                'allow_self_signed' => true
+                            )
+                        );
+
+
+                        //Recipients
+                        $mail->setFrom('johnmanggohomarmy@gmail.com');
+                        $mail->addAddress($email);     //Add a recipient
+            
+
+
+                        //Content
+                        $mail->isHTML(true);                                  //Set email format to HTML
+                        $mail->Subject = 'Here is the subject';
+
+
+                             $mail->Body    = 'Here is the verification link <b><a href=""http://localhost/complete-login-register-form-with-email-verification/change-password.php?reset='.$code.'"> http://localhost/complete-login-register-form-with-email-verification/change-password.php?reset='.$code.'</a></b>';
+                        $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
+
+                        $mail->send();
+                    } catch (Exception $e) {
+                        $msg =  "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                    }
+                $msg = "<div class='alert alert-success'> We have send a verification link to your email address</div>";
+            }else{
+                          $msg = "<div class='alert alert-danger'>Something went wrong</div>";
             }
-            echo "</div>";        
-            $msg = "<div class='alert alert-info'>We've send a verification link on your email address.</div>";
-        }
-    } else {
-        $msg = "<div class='alert alert-danger'>$email - This email address do not found.</div>";
+    }else{
+            $msg = "<div class='alert alert-danger'> no email exist</div>";
     }
+
+
 }
 
 ?>
